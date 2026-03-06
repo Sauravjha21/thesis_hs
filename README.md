@@ -36,8 +36,8 @@ uv run pre-commit run --all-files
 
 ## Notebooks
 
-Notebooks live in `notebooks/`. Heavy logic belongs in `src/thesis/` — notebooks should call package functions, not define them.
+Notebooks live in `notebooks/`. Heavy logic belongs in `src/thesis/` — notebooks should call package functions.
 
 ## Writing
 
-The LaTeX thesis is in `thesis/main.tex`. Compile with your preferred LaTeX toolchain (e.g. `latexmk -pdf thesis/main.tex`).
+The LaTeX thesis is in `thesis/main.tex`. Compile with preferred LaTeX toolchain (e.g. `latexmk -pdf thesis/main.tex`).
