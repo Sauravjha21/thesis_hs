@@ -21,7 +21,7 @@ data/external/*
 
 # Results — regenerate from code
 results/figures/*.csv.gz
-results/tables/*
+results/tables/*.csv.gz
 !results/**/.gitkeep
 
 # LaTeX build artifacts
