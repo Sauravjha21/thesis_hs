@@ -20,7 +20,7 @@ data/external/*
 !data/**/.gitkeep
 
 # Results — regenerate from code
-results/figures/*
+results/figures/*.csv.gz
 results/tables/*
 !results/**/.gitkeep
 
