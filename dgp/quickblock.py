@@ -23,10 +23,11 @@ class QuickBlockDGP(DGP):
         return self._X
 
 
-class QuickBlockFactory:
-    def __init__(self, N, K=1):
+class QuickBlockFactory(object):
+    def __init__(self, N, K=1, pate=1):
         self.N = N
         self.K = K
+        self.pate = pate
 
     def create_dgp(self):
-        return QuickBlockDGP(N=self.N, num_treatments=self.K)
+        return QuickBlockDGP(N=self.N, pate=self.pate, num_treatments=self.K)

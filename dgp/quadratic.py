@@ -31,10 +31,11 @@ class QuadraticDGP(DGP):
         return self._X
 
 
-class QuadraticFactory:
-    def __init__(self, N, K=1):
+class QuadraticFactory(object):
+    def __init__(self, N, K=1, pate=1):
         self.N = N
         self.K = K
+        self.pate = pate
 
     def create_dgp(self):
-        return QuadraticDGP(N=self.N, num_treatments=self.K)
+        return QuadraticDGP(N=self.N, pate=self.pate, num_treatments=self.K)

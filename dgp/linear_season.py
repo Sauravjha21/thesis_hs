@@ -39,11 +39,14 @@ class LinearSeasonDGP(DGP):
         return self._X
 
 
-class LinearSeasonFactory:
-    def __init__(self, N, period=1, K=1):
+class LinearSeasonFactory(object):
+    def __init__(self, N, period=1, K=1, pate=1):
         self.N = N
         self.period = period
         self.K = K
+        self.pate = pate
 
     def create_dgp(self):
-        return LinearSeasonDGP(N=self.N, period=self.period, num_treatments=self.K)
+        return LinearSeasonDGP(
+            N=self.N, pate=self.pate, period=self.period, num_treatments=self.K
+        )

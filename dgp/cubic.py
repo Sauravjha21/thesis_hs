@@ -41,10 +41,11 @@ class CubicDGP(DGP):
         return self._X
 
 
-class CubicFactory:
-    def __init__(self, N, K=1):
+class CubicFactory(object):
+    def __init__(self, N, K=1, pate=1):
         self.N = N
         self.K = K
+        self.pate = pate
 
     def create_dgp(self):
-        return CubicDGP(N=self.N, num_treatments=self.K)
+        return CubicDGP(N=self.N, pate=self.pate, num_treatments=self.K)

@@ -40,11 +40,14 @@ class LinearDriftDGP(DGP):
         return self._X
 
 
-class LinearDriftFactory:
-    def __init__(self, N, slope=1, K=1):
+class LinearDriftFactory(object):
+    def __init__(self, N, slope=1, K=1, pate=1):
         self.N = N
         self.slope = slope
         self.K = K
+        self.pate = pate
 
     def create_dgp(self):
-        return LinearDriftDGP(N=self.N, slope=self.slope, num_treatments=self.K)
+        return LinearDriftDGP(
+            N=self.N, pate=self.pate, slope=self.slope, num_treatments=self.K
+        )
