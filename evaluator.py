@@ -506,13 +506,14 @@ def _null_assignments(
 
     X is assumed to be already scaled exactly as plan.py scales it before
     calling the balancer in the real experiment — so no re-scaling is done
-    here. N and D are read from X.shape and injected into balancer_kwargs
-    for each run. The original balancer_kwargs dict is never mutated.
+    here. N and D are injected only if the balancer's __init__ accepts them
+    (BWD and DM do; Simple does not). The original balancer_kwargs dict is
+    never mutated.
 
     Parameters
     ----------
     X               : np.ndarray, shape (n, d) — pre-scaled covariate matrix
-    balancer_class  : class — balancer to re-run (e.g. bal.BWD)
+    balancer_class  : class — balancer to re-run (e.g. bal.BWD, bal.Simple)
     balancer_kwargs : dict  — kwargs for the balancer excluding N and D
     B               : int   — number of re-runs
 
@@ -522,12 +523,19 @@ def _null_assignments(
         Column b contains the assignment vector from re-run b.
         Values are 0 (control) or 1 (treatment).
     """
+    import inspect
+
     N, D = X.shape
+    sig = inspect.signature(balancer_class.__init__).parameters
+    accepts_N = "N" in sig
+    accepts_D = "D" in sig
     assignments = np.zeros((N, B), dtype=int)
     for b in range(B):
         kwargs = dict(balancer_kwargs)  # copy — never mutate the original
-        kwargs["N"] = N
-        kwargs["D"] = D
+        if accepts_N:
+            kwargs["N"] = N
+        if accepts_D:
+            kwargs["D"] = D
         assignments[:, b] = balancer_class(**kwargs).assign_all(X)
     return assignments
 
@@ -591,15 +599,19 @@ class RandomisationInferencePValue(Evaluator):
         self.B = B
 
     def evaluate(self, X, all_Y, A, YA, ATEhat) -> float:
-        t_star = _t_stat(YA, A)
-        # Under the sharp null H0: Y_i(1) = Y_i(0), each subject's outcome is
-        # fixed at Y_i(0) regardless of assignment. We use all_Y[:, 0] as the
-        # null outcome vector — what every subject would have produced had no
-        # one received treatment.
+        # Use raw difference-in-means as the test statistic, not the t-stat.
+        # Under the sharp null Y_null = all_Y[:, 0] is fixed regardless of
+        # assignment, so the only source of variation in the null distribution
+        # is the randomness in A_b — exactly what RI is meant to characterise.
+        # Dividing by SE (t-stat) introduces extra variability from the varying
+        # partition of Y_null and can miscalibrate the null distribution.
+        obs_stat = _diff_in_means(YA, A)
         Y_null = all_Y[:, 0]
         null_A = _null_assignments(X, self.balancer_class, self.balancer_kwargs, self.B)
-        null_t = np.array([_t_stat(Y_null, null_A[:, b]) for b in range(self.B)])
-        return float(np.mean(np.abs(null_t) >= np.abs(t_star)))
+        null_dist = np.array(
+            [_diff_in_means(Y_null, null_A[:, b]) for b in range(self.B)]
+        )
+        return float(np.mean(np.abs(null_dist) >= np.abs(obs_stat)))
 
 
 class RandomisationInferenceRejects(Evaluator):
@@ -647,11 +659,13 @@ class RandomisationInferenceRejects(Evaluator):
         self.alpha = alpha
 
     def evaluate(self, X, all_Y, A, YA, ATEhat) -> float:
-        t_star = _t_stat(YA, A)
+        obs_stat = _diff_in_means(YA, A)
         Y_null = all_Y[:, 0]
         null_A = _null_assignments(X, self.balancer_class, self.balancer_kwargs, self.B)
-        null_t = np.array([_t_stat(Y_null, null_A[:, b]) for b in range(self.B)])
-        p_value = float(np.mean(np.abs(null_t) >= np.abs(t_star)))
+        null_dist = np.array(
+            [_diff_in_means(Y_null, null_A[:, b]) for b in range(self.B)]
+        )
+        p_value = float(np.mean(np.abs(null_dist) >= np.abs(obs_stat)))
         return int(p_value < self.alpha)
 
 
